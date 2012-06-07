@@ -4,7 +4,7 @@ Maintainer: Jeremy Stephens <jeremy.f.stephens@gmail.com>
 Build-Depends: debhelper (>= 8.0.0), cdbs, libqt4-dev, qt4-qmake
 Standards-Version: 3.9.3
 Section: libs
-Homepage: https://github.com/viking/qhttpserver
+Homepage: https://github.com/nikhilm/qhttpserver
 #Vcs-Git: git://git.debian.org/collab-maint/qhttpserver.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/qhttpserver.git;a=summary
 
