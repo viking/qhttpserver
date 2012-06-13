@@ -10,7 +10,7 @@ Homepage: https://github.com/nikhilm/qhttpserver
 
 Package: libqhttpserver-dev
 Architecture: any
-Depends: libqhttpserver0 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: libqhttpserver0 (= ${binary:Version})
 Description: Qt HTTP Server - development files
  Qt HTTP Server library
 
