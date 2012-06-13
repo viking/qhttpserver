@@ -1,3 +1,9 @@
+qhttpserver (0.1.0-0ubuntu2) precise; urgency=low
+
+  * Split into two packages
+
+ -- Jeremy Stephens <jeremy.f.stephens@gmail.com>  Tue, 12 Jun 2012 21:14:55 -0500
+
 qhttpserver (0.1.0-0ubuntu1) precise; urgency=low
 
   * Initial release
