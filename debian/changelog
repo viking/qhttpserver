@@ -1,3 +1,9 @@
+qhttpserver (0.1.0-0ubuntu3) precise; urgency=low
+
+  * Remove debugging statement
+
+ -- Jeremy Stephens <jeremy.f.stephens@gmail.com>  Thu, 14 Jun 2012 11:52:01 -0500
+
 qhttpserver (0.1.0-0ubuntu2) precise; urgency=low
 
   * Split into two packages

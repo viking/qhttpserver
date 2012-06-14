@@ -1,0 +1,31 @@
+Description: Remove debugging statement
+ .
+ qhttpserver (0.1.0-0ubuntu2) precise; urgency=low
+ .
+   * Split into two packages
+Author: Jeremy Stephens <jeremy.f.stephens@gmail.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- qhttpserver-0.1.0.orig/src/qhttpconnection.cpp
++++ qhttpserver-0.1.0/src/qhttpconnection.cpp
+@@ -34,7 +34,7 @@ QHttpConnection::QHttpConnection(QTcpSoc
+     , m_socket(socket)
+     , m_parser(0)
+ {
+-    qDebug() << "Got new connection" << socket->peerAddress() << socket->peerPort();
++    //qDebug() << "Got new connection" << socket->peerAddress() << socket->peerPort();
+ 
+     m_parser = (http_parser*)malloc(sizeof(http_parser));
+     http_parser_init(m_parser, HTTP_REQUEST);
