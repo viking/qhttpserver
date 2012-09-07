@@ -1,4 +1,4 @@
-/* Copyright 2009,2010 Ryan Dahl <ry@tinyclouds.org>
+/* Copyright Joyent, Inc. and other Node contributors. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -186,7 +186,28 @@ static const uint8_t normal_url_char[256] = {
 /* 112  p   113  q   114  r   115  s   116  t   117  u   118  v   119  w  */
         1,       1,       1,       1,       1,       1,       1,       1,
 /* 120  x   121  y   122  z   123  {   124  |   125  }   126  ~   127 del */
-        1,       1,       1,       1,       1,       1,       1,       0 };
+        1,       1,       1,       1,       1,       1,       1,       0,
+
+/* Remainder of non-ASCII range are accepted as-is to support implicitly UTF-8
+   encoded paths. This is out of spec, but clients generate this and most other
+   HTTP servers support it. We should, too. */
+
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1,
+        1,       1,       1,       1,       1,       1,       1,       1 };
 
 
 enum state
@@ -240,15 +261,17 @@ enum state
 
   , s_header_almost_done
 
+  , s_chunk_size_start
+  , s_chunk_size
+  , s_chunk_parameters
+  , s_chunk_size_almost_done
+  
   , s_headers_almost_done
   /* Important: 's_headers_almost_done' must be the last 'header' state. All
    * states beyond this must be 'body' states. It is used for overflow
    * checking. See the PARSING_HEADER() macro.
    */
-  , s_chunk_size_start
-  , s_chunk_size
-  , s_chunk_size_almost_done
-  , s_chunk_parameters
+
   , s_chunk_data
   , s_chunk_data_almost_done
   , s_chunk_data_done
@@ -258,7 +281,7 @@ enum state
   };
 
 
-#define PARSING_HEADER(state) (state <= s_headers_almost_done && 0 == (parser->flags & F_TRAILING))
+#define PARSING_HEADER(state) (state <= s_headers_almost_done)
 
 
 enum header_states
@@ -331,10 +354,20 @@ size_t http_parser_execute (http_parser *parser,
   uint64_t nread = parser->nread;
 
   if (len == 0) {
-    if (state == s_body_identity_eof) {
-      CALLBACK2(message_complete);
+    switch (state) {
+      case s_body_identity_eof:
+        CALLBACK2(message_complete);
+        return 0;
+
+      case s_dead:
+      case s_start_req_or_res:
+      case s_start_res:
+      case s_start_req:
+        return 0;
+
+      default:
+        return 1; // error
     }
-    return 0;
   }
 
   /* technically we could combine all of these (except for url_mark) into one
@@ -707,6 +740,9 @@ size_t http_parser_execute (http_parser *parser,
             CALLBACK(url);
             state = s_req_http_start;
             break;
+          case '?':
+            state = s_req_query_string_start;
+            break;
           default:
             goto error;
         }
@@ -728,6 +764,9 @@ size_t http_parser_execute (http_parser *parser,
              */
             CALLBACK(url);
             state = s_req_http_start;
+            break;
+          case '?':
+            state = s_req_query_string_start;
             break;
           default:
             goto error;
@@ -1448,6 +1487,7 @@ size_t http_parser_execute (http_parser *parser,
 
       case s_chunk_size_start:
       {
+        assert(nread == 1);
         assert(parser->flags & F_CHUNKED);
 
         c = unhex[(unsigned char)ch];
@@ -1496,6 +1536,8 @@ size_t http_parser_execute (http_parser *parser,
       {
         assert(parser->flags & F_CHUNKED);
         STRICT_CHECK(ch != LF);
+
+        nread = 0;
 
         if (parser->content_length == 0) {
           parser->flags |= F_TRAILING;
